@@ -1,20 +1,42 @@
-* {
-  /* border: 1px solid black; */
-}
+/* * {
+  border: 1px solid black;
+} */
 
 :root {
   font-size: 17px;
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.App {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  background-color: aliceblue;
+}
+
 body {
+  border: 1px solid black;
   display: block;
-  margin: 0;
+  margin: auto 0;
   padding: 0;
 }
 
 #time-left {
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  /* margin: auto; */
   font-size: 4.20rem;
+}
+
+#time-num {
+  margin: 0;
+  padding: 8px;
+  border: 3px solid rgb(188, 206, 222);
+  border-radius: 10px;
+  
 }
 
 #editor-block {
@@ -39,7 +61,6 @@ body {
   display:flex;
   justify-content: center;
   align-items: center;
-  /* flex-direction: row; */
 }
 
 .numButton {
@@ -70,9 +91,31 @@ body {
 }
 
 
+#pauseplay {
+  display: flex;
+  justify-content: center;
+  margin: auto;
+}
 
+button#start_stop, button#reset {
+  background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
+}
 
+#start_stop {
+  width: auto;
+  margin: 8px;
+}
 
+#reset {
+  width: auto;
+  margin: 8px;
+}
 
 
 

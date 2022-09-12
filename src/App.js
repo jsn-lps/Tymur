@@ -7,11 +7,13 @@ function App() {
 
         <div id="timer-label"></div>
 
-        <div id="time-left">00:00</div>
-        <div id="start_stop">pause/play</div>
-        <div id="reset">reset</div>
+        <div id="time-left"><div id="time-num">00:00</div></div>
+        <div id="pauseplay">
+          <button id="start_stop">pause/play</button>
+          <button id="reset">reset</button>
+        </div>
 
-
+        
         <div id="editor-block">
           <div id="label-block">
             <div id="break-label">Break Length</div>
