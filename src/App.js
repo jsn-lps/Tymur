@@ -12,18 +12,25 @@ function App() {
         <div id="reset">reset</div>
 
 
-      <div id="yuh"></div>
-      <div id="break-label">Break Length</div>
-        <button id="break-decrement">-</button>
-        <div id="break-length">5 default</div>
-        <button id="break-increment">+</button>
+        <div id="editor-block">
+          <div id="label-block">
+            <div id="break-label">Break Length</div>
+              <div id="label-subblock">
+                <button className="numButton" id="break-decrement">-</button>
+                <div className="numLength" id="break-length">5</div>
+                <button className="numButton" id="break-increment addremovebutton">+</button>
+              </div>
+          </div>
 
-
-      <div id="session-label">Session Length</div>
-        <button id="session-decrement">-</button>
-        <div id="session-length">25 default</div>
-        <button id="session-increment">+</button>
-
+          <div id="label-block">
+            <div id="session-label">Session Length</div>
+              <div id="label-subblock">
+                <button className="numButton" id="session-decrement addremovebutton">-</button>
+                <div className="numLength" id="session-length">25</div>
+                <button className="numButton" id="session-increment addremovebutton">+</button>
+              </div>
+          </div>
+        </div>
 
       </div>
     </div>
