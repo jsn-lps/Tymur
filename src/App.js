@@ -1,5 +1,5 @@
 import './App.css';
-import { useContext, useState, createContext, useEffect } from 'react';
+import { useContext, useState, createContext, useEffect, useRef } from 'react';
 import React from 'react';
 import { render } from '@testing-library/react';
 
@@ -28,21 +28,22 @@ let breakTime = false; // if running = true && breakTime = true, its break time
 // main component
 function App() {
 
-  const [sesMin, setSesMin] = useState(defaultMin);
+  const [sesMin, setMin] = useState(defaultMin);
   const [brkMin, setBrkMin] = useState(defaultBreak);
-  const [sesSec, setSesSec] = useState(defaultSec);
+  const [sesSec, setSec] = useState(defaultSec);
 
 
     const childTest = (e) => {
-      setSesMin(e)
+      setMin(e)
     }
   
   return (
     <div className="App">
-      <NumsContext.Provider value={{ ses: [sesMin, setSesMin], sec: [sesSec, setSesSec], brk: [brkMin, setBrkMin]}}>
+      <NumsContext.Provider value={{ ses: [sesMin, setMin], sec: [sesSec, setSec], brk: [brkMin, setBrkMin]}}>
       <div id="body">
 
-      <div id="timer-label">Session Time/Break Time (toggle this)</div>
+      <div id="timer-label">{breakTime ? "Break Time" : "Session Time"}</div>
+      <div></div>
 
       <TimeLeft />
 
@@ -61,7 +62,7 @@ function App() {
 
 const runningToggle = () => {
   running ? running = false : running = true;
-  console.log(running);
+  // console.log(running);
   if(running && !paused){
 
   }
@@ -73,11 +74,11 @@ const runningToggle = () => {
 
 
 const EditableTimers = () => {
-  // let [sesMin, setSesMin] = useState(defaultMin);
+  // let [sesMin, setMin] = useState(defaultMin);
   // let [brkMin, setBrkMin] = useState(defaultBreak);
   const {ses, brk} = useContext(NumsContext)
 
-  const [sesMin, setSesMin] = ses;
+  const [sesMin, setMin] = ses;
   const [brkMin, setBrkMin] = brk;
 
   
@@ -94,7 +95,7 @@ const EditableTimers = () => {
       
         } else if(e.target.value === "session-btn") {
           if (sesMin != 0) {
-            setSesMin(sesMin - 1);
+            setMin(sesMin - 1);
             }
           }
         }
@@ -114,7 +115,7 @@ const EditableTimers = () => {
       
         } else if(e.target.value === "session-btn") {
           if (sesMin != 60) {
-            setSesMin(sesMin + 1);
+            setMin(sesMin + 1);
           }
         }
       }
@@ -151,22 +152,78 @@ const EditableTimers = () => {
 }
 
 
-const TimeLeft = () => {
-  const {ses, sec} = useContext(NumsContext)
-  const [sesMin, setSesMin] = ses;
-  const [sesSec, setSesSec] = sec;
-  
-  
+
+
+////////// testing 
+
+function useInterval(callback, delay) {
+  const savedCallback = useRef();
+
+  // Remember the latest callback.
   useEffect(() => {
-    setInterval(function() {
-      if (running == true){
-        if(sesMin > 0 && sesSec == 0) {
-          setSesSec(sesSec + 59);
-          setSesMin(sesMin - 1);
-        } else {
-          setSesSec(sesSec - 1);
-        }
-        console.log(sesSec)
+    savedCallback.current = callback;
+  }, [callback]);
+
+  // Set up the interval.
+  useEffect(() => {
+    function tick() {
+      savedCallback.current();
+    }
+    if (delay !== null) {
+      let id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+  }, [delay]);
+}
+
+////////// testing 
+
+
+
+
+
+
+const TimeLeft = () => {
+  const {ses, sec, brk} = useContext(NumsContext)
+  const [sesMin, setMin] = ses;
+  const [sesSec, setSec] = sec;
+  const [brkMin, setBrkMin] = brk;
+
+  
+  
+  useInterval(() => {
+    if (running == true && paused == false){
+      if (breakTime == true) {
+        setMin(sesHolder);
+        setSec(59);
+        breakTime = false;
+      } else if(sesMin > 0 && sesSec < 1) {
+        setSec(0 + 59);
+        setMin(sesMin - 1);
+      } else if (sesSec > 0){
+        setSec(sesSec - 1);
+      } else 
+      paused = true
+      console.log(sesSec)
+    }
+  }, 1000);
+
+  useInterval(() => {
+    if (running == true && paused == true){
+      if (breakTime == false) {
+        setMin(brkMin - 1);
+        setSec(59);
+        breakTime = true;
+      
+      } else if (sesMin > 0 && sesSec < 1) {
+      setMin(sesMin - 1);
+      setSec(0 + 59);
+      } else 
+      paused = false;
+    }
+
+  }, 1000);
+
         
         // logic here goes as follows 
         
@@ -178,9 +235,9 @@ const TimeLeft = () => {
         
         // else if (sec == 0 && sesMin = 0) { end timer, switch to break timer, play audio}
         
-      }
-    }, 1000) // every 1000ms execute this code.
-  }, [running])
+ // every 1000ms execute this code.
+
+
   
   let curTime = `${sesMin.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})}:${sesSec.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})}`;
 
@@ -196,15 +253,8 @@ return (
 
 
 
-// second timer
-const secondCounter = () => {
 
 
-}
-
-const playPause = () => {
-
-}
 
 
 
