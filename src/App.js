@@ -1,7 +1,6 @@
 import './App.css';
 import { useContext, useState, createContext, useEffect, useRef } from 'react';
 import React from 'react';
-import { render } from '@testing-library/react';
 
 
 // var declarations
@@ -13,149 +12,19 @@ const NumsContext = React.createContext({});
 let defaultMin = 25;
 let defaultBreak = 5;
 let defaultSec = 0;
-let brkHolder = defaultBreak;
-let sesHolder = defaultMin;
+let brkHolder = defaultBreak + 0;
+let sesHolder = defaultMin + 0;
 
 
-// context for these? 
-let running = false; // for reset handling to know if a session/break has started.
 // reset button will set to default values of false.
-let paused = false; // for play/pause button
-
-let breakTime = false; // if running = true && breakTime = true, its break time
-
-
-// main component
-function App() {
-
-  const [sesMin, setMin] = useState(defaultMin);
-  const [brkMin, setBrkMin] = useState(defaultBreak);
-  const [sesSec, setSec] = useState(defaultSec);
-
-
-    const childTest = (e) => {
-      setMin(e)
-    }
-  
-  return (
-    <div className="App">
-      <NumsContext.Provider value={{ ses: [sesMin, setMin], sec: [sesSec, setSec], brk: [brkMin, setBrkMin]}}>
-      <div id="body">
-
-      <div id="timer-label">{breakTime ? "Break Time" : "Session Time"}</div>
-      <div></div>
-
-      <TimeLeft />
-
-      <div id="pauseplay">
-        <button onClick={runningToggle} id="start_stop">pause/play</button>
-        <button id="reset">reset</button>
-      </div>
-
-      </div> 
-        <EditableTimers />
-        </NumsContext.Provider >
-    </div>
-  );
-}
-
-
-const runningToggle = () => {
-  running ? running = false : running = true;
-  // console.log(running);
-  if(running && !paused){
-
-  }
-}
+let running = false; // has the timer ever started ( lengths aren't editable when true)
+let paused = false; // for play/pause button usage
+let breakTime = false; // for controlling displays when toggling break and session timers
+let isSession = true; // help with toggling break and session timers
 
 
 
-
-
-
-const EditableTimers = () => {
-  // let [sesMin, setMin] = useState(defaultMin);
-  // let [brkMin, setBrkMin] = useState(defaultBreak);
-  const {ses, brk} = useContext(NumsContext)
-
-  const [sesMin, setMin] = ses;
-  const [brkMin, setBrkMin] = brk;
-
-  
-  
-
-    const Decrement = (e) => {
-      // only allow if running == false
-      if (!running) {
-        if(e.target.value === "break-btn") {
-          if(brkMin != 0) {
-          setBrkMin(brkMin - 1);
-          // console.log(brkMin)
-          }
-      
-        } else if(e.target.value === "session-btn") {
-          if (sesMin != 0) {
-            setMin(sesMin - 1);
-            }
-          }
-        }
-        brkHolder = brkMin;
-        sesHolder = sesMin;
-      }
-    
-    
-    const Increment = (e) => {
-      // only allow if running == false
-      if (!running) {
-        if(e.target.value === "break-btn") {
-          if(brkMin != 60) {
-            setBrkMin(brkMin + 1);
-          // console.log(brkMin)
-          }
-      
-        } else if(e.target.value === "session-btn") {
-          if (sesMin != 60) {
-            setMin(sesMin + 1);
-          }
-        }
-      }
-      brkHolder = brkMin;
-      sesHolder = sesMin;
-    }
-
-  return (
-    <div>
-      {/* BREAK TIMER BLOCK */}
-  <div id="editor-block">
-    <div id="label-block">
-      <div id="break-label">Break Length</div>
-        <div id="label-subblock">
-          <button onClick={Decrement} value="break-btn" className="numButton" id="break-decrement">-</button>
-          <div className="numLength" id="break-length">{running ? brkHolder : brkMin}</div>
-          <button onClick={Increment} value="break-btn" className="numButton" id="break-increment addremovebutton">+</button>
-        </div>
-    </div>
-
-    {/* SESSION TIMER BLOCK */}
-    <div id="label-block">
-      <div id="session-label">Session Length</div>
-        <div id="label-subblock">
-          <button onClick={Decrement} value="session-btn" className="numButton" id="session-decrement addremovebutton">-</button>
-          <div className="numLength" id="session-length">{running ? sesHolder : sesMin}</div>
-          <button onClick={Increment} value="session-btn" className="numButton" id="session-increment addremovebutton">+</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-  )
-}
-
-
-
-
-////////// testing 
-
+////////// custom hook for timer 
 function useInterval(callback, delay) {
   const savedCallback = useRef();
 
@@ -175,68 +44,231 @@ function useInterval(callback, delay) {
     }
   }, [delay]);
 }
-
-////////// testing 
-
+////////// custom hook for timer 
 
 
 
+
+// main component
+function App() {
+  // state declarations
+  const [sesMin, setMin] = useState(defaultMin);
+  const [brkMin, setBrkMin] = useState(defaultBreak);
+  const [sesSec, setSec] = useState(defaultSec);
+
+  // times up sound
+  const beepSound = useRef();
+  const handleBeep = () => {
+    if (beepSound.current !== null) {
+      beepSound.current.play();
+    }
+  }
+  // anytime session flag triggers, play audio
+  useEffect(() => {
+    if (running) {
+    handleBeep()}
+    }, 
+    [isSession]
+  )
+
+  // for pressing the reset button
+  const ResetButton = () => {
+    // time values 
+    setMin(defaultMin);
+    setSec(defaultSec);
+    setBrkMin(defaultBreak);
+    brkHolder = defaultBreak;
+    sesHolder = defaultMin;
+    // flags 
+    running = false;
+    paused = false;
+    breakTime = false;
+    beepSound.current.pause();
+    beepSound.current.currentTime = 0;
+  }
+
+  return (
+    <div className="App">
+      <NumsContext.Provider value={{ ses: [sesMin, setMin], sec: [sesSec, setSec], brk: [brkMin, setBrkMin]}}>
+      <div id="body">
+      <div id="timer-label">{breakTime ? "Break Time" : "Session Time"}</div>
+      <TimeLeft /> 
+      <div id="pauseplay">
+        <button onClick={RunningToggle} id="start_stop">pause/play</button>
+        <button onClick={ResetButton} id="reset">reset</button>
+        </div>
+      </div> 
+        <EditableTimers />
+        </NumsContext.Provider >
+        <audio id="beep" ref={beepSound} preload="auto" type='audio' src="https://www.myinstants.com/media/sounds/taco-bell-bong-sfx.mp3" />
+    </div>
+  );
+}
+
+// on/off switch for pause/play button
+// "running" toggle
+const RunningToggle = () => {
+  running ? running = false : running = true
+
+}
+
+const EditableTimers = () => {
+
+  const {ses, brk} = useContext(NumsContext)
+
+  const [sesMin, setMin] = ses;
+  const [brkMin, setBrkMin] = brk;
+
+  const DecrementBrk = () => {setBrkMin((prev) => prev - 1)}
+  const IncrementBrk = () => {setBrkMin((prev) => prev + 1)}
+  const DecrementMin = () => {setMin((prev) => prev - 1)}
+  const IncrementMin = () => {setMin((prev) => prev + 1)}
+
+    const Decrement = (e) => {
+      // only allow if running == false
+      if (!running) {
+        if(e.target.value === "break-btn") {
+          if(brkMin != 1) {
+            setBrkMin((prev) => prev - 1) // functional updater?? hello?? ?????
+          // console.log(brkMin)
+          brkHolder--;
+          }
+      
+        } else if(e.target.value === "session-btn") {
+          if (sesMin != 1) {
+            DecrementMin();
+            sesHolder--;
+            }
+          }
+        }
+      }
+    
+    
+    const Increment = (e) => {
+      // only allow if running == false
+      if (!running) {
+        if(e.target.value === "break-btn") {
+          if(brkMin != 60) {
+            IncrementBrk()
+            brkHolder++;
+          // console.log(brkMin)
+          }
+      
+        } else if(e.target.value === "session-btn") {
+          if (sesMin != 60) {
+            IncrementMin();
+            sesHolder++;
+          }
+        }
+      }
+    }
+
+  return (
+    <div>
+      {/* BREAK TIMER BLOCK */}
+  <div id="editor-block">
+    <div id="label-block">
+      <div id="break-label">Break Length</div>
+        <div id="label-subblock">
+          <button onClick={Decrement} value="break-btn" className="numButton" id="break-decrement">-</button>
+          <div className="numLength" id="break-length">{brkHolder}</div>
+          <button onClick={Increment} value="break-btn" className="numButton" id="break-increment">+</button>
+        </div>
+    </div>
+
+    {/* SESSION TIMER BLOCK */}
+    <div id="label-block">
+      <div id="session-label">Session Length</div>
+        <div id="label-subblock">
+          <button onClick={Decrement} value="session-btn" className="numButton" id="session-decrement">-</button>
+          <div className="numLength" id="session-length">{sesHolder}</div>
+          <button onClick={Increment} value="session-btn" className="numButton" id="session-increment">+</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  )
+}
 
 
 const TimeLeft = () => {
   const {ses, sec, brk} = useContext(NumsContext)
-  const [sesMin, setMin] = ses;
-  const [sesSec, setSec] = sec;
-  const [brkMin, setBrkMin] = brk;
+  const [sesMin, setSesMin] = ses;
+  const [sesSec, setSesSec] = sec;
 
+  const setSec = (e) => {setSesSec((prev) => e);}
   
-  
-  useInterval(() => {
-    if (running == true && paused == false){
-      if (breakTime == true) {
-        setMin(sesHolder);
+  // session increment
+  useInterval(() => { 
+    if (running == true && paused == false) {
+      if(sesMin > 0 && sesSec < 1) {
+        isSession = true
+        setSesMin((prev) => prev - 1);
         setSec(59);
-        breakTime = false;
-      } else if(sesMin > 0 && sesSec < 1) {
-        setSec(0 + 59);
-        setMin(sesMin - 1);
-      } else if (sesSec > 0){
-        setSec(sesSec - 1);
-      } else 
-      paused = true
-      console.log(sesSec)
-    }
-  }, 1000);
+        console.log("session -1 min");
 
+        // increment seconds
+      } else if (sesSec > 1){
+        setSesSec((prev) => prev - 1)
+        console.log("session -1 sec")
+
+      } else if (sesMin > 0 && sesSec == 1) {
+        setSec(0);
+        console.log("session 00 sec with more mins")
+
+        // prep for break time
+      } else if (sesMin == 0 && sesSec == 1) {
+        setSec(0);
+        breakTime = true;
+        console.log("session 1 sec left")
+
+
+        // go to break time!!
+      } else if (sesMin == 0 && sesSec == 0 && isSession == true ) {
+        console.log("Going to break"); 
+        setSesMin(() => brkHolder)
+        paused = true;
+      }
+    } 
+  }, 100); // 1000 for real time. 100ms for speedy testing
+  
+
+  // break increment
   useInterval(() => {
     if (running == true && paused == true){
-      if (breakTime == false) {
-        setMin(brkMin - 1);
+      if (sesMin > 0 && sesSec < 1) {
+        isSession = false
+        setSesMin((prev) => prev - 1);
         setSec(59);
-        breakTime = true;
-      
-      } else if (sesMin > 0 && sesSec < 1) {
-      setMin(sesMin - 1);
-      setSec(0 + 59);
-      } else 
-      paused = false;
-    }
+        console.log("break -1 min")
 
-  }, 1000);
+        // increment seconds
+      } else if (sesSec > 1){
+        setSesSec((prev) => prev - 1)
+        console.log("break -1 sec")
 
-        
-        // logic here goes as follows 
-        
-        // allow pausing by adding a status handler (paused = false)
-        // i.e, if(!paused) { do code }
-        // then have play/pause onClick run a function that toggles paused
-        
-        // if (sec == 0 && sesMin >= 1) { sesMin -= 1; sec = 59 }
-        
-        // else if (sec == 0 && sesMin = 0) { end timer, switch to break timer, play audio}
-        
- // every 1000ms execute this code.
+      } else if (sesMin > 0 && sesSec == 1) {
+        setSec(0);
+        console.log("break 00 sec with more mins")
 
+        // prep for session time
+      } else if (sesMin == 0 && sesSec == 1) {
+        setSec(0);
+        breakTime = false;
+        console.log("break 1 sec left")
+
+
+        // go back to session!!
+     } else if (sesMin == 0 && sesSec == 0 && isSession == false) {
+        console.log("Going to session")
+        setSesMin(() => sesHolder)
+        paused = false;
+        
+      }
+    } 
+
+  }, 100);
 
   
   let curTime = `${sesMin.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})}:${sesSec.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})}`;
@@ -247,41 +279,7 @@ return (
       {curTime}
     </div>
   </div>
-
-)
+  )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export default App;
